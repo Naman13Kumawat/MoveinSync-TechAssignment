@@ -4,16 +4,14 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 const handleSumbit = (fname, navigate, user) => {
-  console.log(fname, user.nickname);
-  if (user) user.name = fname;
   const data = JSON.stringify({
-    fname: user.name,
-    number: user.nickname,
+    number: user.nickname.slice(1),
+    fname: fname,
   });
 
   const config = {
     method: "post",
-    url: "http://localhost:4000/api",
+    url: "http://localhost:4000/postSheetData",
     headers: {
       "Content-Type": "application/json",
     },
@@ -33,29 +31,6 @@ const handleSumbit = (fname, navigate, user) => {
 export default function Profile() {
   const navigate = useNavigate();
   const { user, isAuthenticated, isLoading } = useAuth0();
-  // const [sheetData, setSD] = useState([]);
-
-  // useEffect(() => {
-  //   const config = {
-  //     method: "get",
-  //     url: "http://localhost:4000/api",
-  //     headers: {},
-  //   };
-  //   axios(config)
-  //     .then(function (response) {
-  //       const data = response && response.data.values;
-  //       setSD(data);
-  //     })
-  //     .catch(function (error) {
-  //       console.log(error);
-  //     });
-  // }, []);
-  // sheetData.forEach((entry) => {
-  //   console.log(entry[1], user?.nickname.slice(1));
-  //   if (entry[1] === user?.nickname) {
-  //     navigate("/dashboard");
-  //   }
-  // });
   const [fname, setfname] = useState("");
   if (isLoading) {
     return <div>Loading ...</div>;
@@ -73,7 +48,7 @@ export default function Profile() {
           }}
         />
       </label>
-      <p>Number: {user?.name}</p>
+      <p>Number: {user?.name} (Verified)</p>
       <button
         onClick={() => {
           handleSumbit(fname, navigate, user);

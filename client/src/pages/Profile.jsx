@@ -10,12 +10,12 @@ export default function Profile() {
   useEffect(() => {
     const config = {
       method: "get",
-      url: "http://localhost:4000/api",
+      url: "http://localhost:4000/getSheetData",
       headers: {},
     };
     axios(config)
       .then(function (response) {
-        const data = response && response.data.values;
+        const data = response && response.data.data;
         setSD(data);
       })
       .catch(function (error) {
@@ -23,6 +23,11 @@ export default function Profile() {
       });
   }, []);
   console.log(sheetData);
+  const filteredarr =
+    !isLoading &&
+    sheetData.filter((entry) => {
+      return entry.Number === user.name.slice(1);
+    });
   if (isLoading) {
     return <div>Loading ...</div>;
   }
@@ -48,12 +53,32 @@ export default function Profile() {
   return isAuthenticated ? (
     <div>
       <h1>Profile</h1>
-      <p>Welcome {user.name}</p>
+      <p>Welcome.</p>
       {/* <Logout /> */}
       <p>
         Upload photos for {mntName} &nbsp;
         <Link to="/upload">Upload</Link>
       </p>
+      <div>
+        <h3>Payroll History</h3>
+        {filteredarr.map((element) => {
+          return (
+            <div key={element.id}>
+              <p>{element.id}</p>
+              <p>{element.Number}</p>
+              <p>{element.Name}</p>
+              <p>{element.Approval}</p>
+              <p>{element.UploadMonth}</p>
+              <p>{element.UploadDateTime}</p>
+              {element.Links.split(",").map((link, index) => {
+                return <p key={index}>{`Photo ${index + 1} link: ${link}`}</p>;
+              })}
+              <p>{element.Payoutlink}</p>
+              <hr />
+            </div>
+          );
+        })}
+      </div>
     </div>
   ) : (
     <div>
