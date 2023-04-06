@@ -6,8 +6,17 @@ const PORT = process.env.PORT || 4000;
 const cors = require("cors");
 app.use(cors());
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+const Buffer = require("buffer/").Buffer;
+
+const AWS = require("aws-sdk");
+const s3 = new AWS.S3({
+  accessKeyId: process.env.AWS_ACCESS_KEY,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  region: "ap-south-1",
+});
+
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
 // app.get("/api", async (req, res) => {
 //   const auth = new google.auth.GoogleAuth({
@@ -76,7 +85,6 @@ function getAuth() {
   return auth;
 }
 
-// proccure googleSheet method
 async function getGoogleSheet(auth) {
   const client = await auth.getClient();
   const googleSheet = google.sheets({ version: "v4", auth: client });
@@ -122,18 +130,70 @@ app.get("/getSheetData", async (req, res) => {
   });
 });
 
+// Get sheet data with number
+app.get("/getSheetData/:number", async (req, res) => {
+  const num = req.params.number;
+  const auth = getAuth();
+  const googleSheet = await getGoogleSheet(auth);
+
+  const getSheetData = await googleSheet.spreadsheets.values.get({
+    auth,
+    spreadsheetId,
+    //   range: 'Sheet1!A2:B',
+    range: "Sheet1",
+  });
+
+  // For changing array of array to array of objects
+  const rows = getSheetData.data.values;
+  const headers = rows.shift();
+  const data = rows.map((row, idx) => {
+    const obj = {};
+    headers.forEach((header, index) => {
+      obj[header] = row[index];
+    });
+    obj.id = idx + 1;
+    return obj;
+  });
+
+  const filteredArr = data.filter((entry) => {
+    return entry.Number === num;
+  });
+
+  res.status(200).json(filteredArr);
+});
+
 //posts data to cell
 app.post("/postSheetData", async (req, res) => {
   const auth = getAuth();
   const googleSheet = await getGoogleSheet(auth);
-  const { number, fname } = req.body;
+  const {
+    Approval,
+    Links,
+    Name,
+    Number,
+    PayoutLink,
+    UploadDateTime,
+    UploadMonth,
+  } = req.body;
+
+  const StringLinks = Links?.toString();
   await googleSheet.spreadsheets.values.append({
     auth,
     spreadsheetId,
     range: "Sheet1",
     valueInputOption: "USER_ENTERED",
     resource: {
-      values: [[number, fname]],
+      values: [
+        [
+          Number,
+          Name,
+          UploadMonth,
+          UploadDateTime,
+          StringLinks,
+          Approval,
+          PayoutLink,
+        ],
+      ],
     },
   });
 
@@ -176,6 +236,31 @@ app.post("/updateSheetData", async (req, res) => {
   res.status(200).json({
     success: true,
     message: "Sucessfully Updated",
+  });
+});
+
+// AWS S3 Services
+app.post("/upload", (req, res) => {
+  const { image, fileName } = req.body;
+  const base64String = image.replace(/^data:image\/\w+;base64,/, "");
+  const buff = new Buffer(base64String, "base64");
+  // Set the S3 key and parameters
+  const params = {
+    Bucket: process.env.AWS_BUCKET_NAME,
+    Key: fileName,
+    Body: buff,
+    "Content-Type": "image/jpeg",
+    ACL: "public-read",
+  };
+
+  // Upload the file to S3
+  s3.upload(params, (err, data) => {
+    if (err) {
+      console.log(err);
+      res.status(500).send("Error uploading file");
+    }
+    console.log(`File uploaded successfully. ${data.Location}`);
+    res.status(200).send(data);
   });
 });
 

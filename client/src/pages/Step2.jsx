@@ -1,37 +1,24 @@
 import { useAuth0 } from "@auth0/auth0-react";
-import axios from "axios";
-import { useState } from "react";
+import { useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-
-const handleSumbit = (fname, navigate, user) => {
-  const data = JSON.stringify({
-    number: user.nickname.slice(1),
-    fname: fname,
-  });
-
-  const config = {
-    method: "post",
-    url: "http://localhost:4000/postSheetData",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    data: data,
-  };
-
-  axios(config)
-    .then(function (response) {
-      console.log(response.data);
-      navigate("/dashboard");
-    })
-    .catch(function (error) {
-      console.log(error);
-    });
-};
+import { UserContext } from "../context/User";
 
 export default function Profile() {
+  const { user, setUser } = useContext(UserContext);
   const navigate = useNavigate();
-  const { user, isAuthenticated, isLoading } = useAuth0();
-  const [fname, setfname] = useState("");
+  const { user: authUser, isAuthenticated, isLoading } = useAuth0();
+
+  useEffect(() => {
+    if (!isLoading) {
+      setUser({ ...user, Number: authUser?.nickname.slice(1) });
+    }
+  }, [isLoading]);
+
+  console.log(user);
+  const handleSumbit = () => {
+    localStorage.setItem("currUser", JSON.stringify(user));
+    navigate("/dashboard");
+  };
   if (isLoading) {
     return <div>Loading ...</div>;
   }
@@ -44,18 +31,12 @@ export default function Profile() {
           name="fname"
           placeholder="Name"
           onChange={(e) => {
-            setfname(e.target.value);
+            setUser({ ...user, Name: e.target.value });
           }}
         />
       </label>
-      <p>Number: {user?.name} (Verified)</p>
-      <button
-        onClick={() => {
-          handleSumbit(fname, navigate, user);
-        }}
-      >
-        Continue
-      </button>
+      <p>Number: {user?.Number} (Verified)</p>
+      <button onClick={handleSumbit}>Continue</button>
     </div>
   ) : (
     <div>

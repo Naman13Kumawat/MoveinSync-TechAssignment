@@ -3,16 +3,19 @@ import Login from "./pages/Login";
 import Step2 from "./pages/Step2";
 import Profile from "./pages/Profile";
 import Upload from "./pages/Upload";
+import UserContextProvider from "./context/User.js";
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Login />} />
-        <Route path="/steptwo" element={<Step2 />} />
-        <Route path="/dashboard" element={<Profile />} />
-        <Route path="/upload" element={<Upload />} />
-      </Routes>
-    </BrowserRouter>
+    <UserContextProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Login />} />
+          <Route path="/steptwo" element={<Step2 />} />
+          <Route path="/dashboard" element={<Profile />} />
+          <Route path="/upload" element={<Upload />} />
+        </Routes>
+      </BrowserRouter>
+    </UserContextProvider>
   );
 }
