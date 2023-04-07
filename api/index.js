@@ -221,15 +221,22 @@ app.post("/updateSheetData", async (req, res) => {
   const auth = getAuth();
   const googleSheet = await getGoogleSheet(auth);
 
-  const { number, fname, id } = req.body;
+  const { action, id } = req.body;
+  console.log(action, id);
+  let payoutLink;
+  if (action === "Approved") {
+    payoutLink = "link";
+  } else {
+    payoutLink = "Not Approved";
+  }
 
   await googleSheet.spreadsheets.values.update({
     auth,
     spreadsheetId,
-    range: `Sheet1!A${id + 1}`,
+    range: `Sheet1!F${id + 1}`,
     valueInputOption: "USER_ENTERED",
     resource: {
-      values: [[number, fname]],
+      values: [[action, payoutLink]],
     },
   });
 
