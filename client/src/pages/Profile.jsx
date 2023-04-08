@@ -3,6 +3,7 @@ import Login from "./Login";
 import { Link } from "react-router-dom";
 import { useContext, useEffect, useState } from "react";
 import axios from "axios";
+import Button from "@mui/material/Button";
 import { UserContext } from "../context/User";
 
 export default function Profile() {
@@ -11,7 +12,7 @@ export default function Profile() {
   const [notUploaded, setNotUploaded] = useState(true);
   const [sheetData, setSD] = useState([]);
   console.log("Context", user);
-
+  const [maxId, setMaxId] = useState(0);
   const month = [
     "January",
     "February",
@@ -58,6 +59,7 @@ export default function Profile() {
 
   useEffect(() => {
     sheetData?.forEach((entry) => {
+      setMaxId(maxId > entry.id ? maxId : entry.id);
       const uploadYear = entry.UploadDateTime.split(" ")[3];
       if (
         entry.UploadMonth === mntName &&
@@ -68,7 +70,7 @@ export default function Profile() {
       }
     });
   }, [sheetData]);
-
+  console.log(maxId);
   if (isLoading) {
     return <div>Loading ...</div>;
   }
@@ -105,7 +107,19 @@ export default function Profile() {
                     </p>
                   );
                 })}
-                <p>{element.Payoutlink}</p>
+                {element.Approval === "Approved" &&
+                element.PayoutLink !== "Claimed" ? (
+                  <Link to={element.PayoutLink}>Payout Link</Link>
+                ) : (
+                  <p>{element.PayoutLink}</p>
+                )}
+                {element.PayoutLink === "Not approved" &&
+                element.UploadMonth === mntName &&
+                element.id === maxId ? (
+                  <Link to="/upload">
+                    <Button variant="contained">Upload Again</Button>
+                  </Link>
+                ) : null}
                 <hr />
               </div>
             );

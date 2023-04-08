@@ -5,6 +5,7 @@ import Profile from "./pages/Profile";
 import Upload from "./pages/Upload";
 import UserContextProvider from "./context/User.js";
 import Admin from "./pages/Admin";
+import PayoutPage from "./pages/PayoutPage";
 
 export default function App() {
   return (
@@ -16,6 +17,7 @@ export default function App() {
           <Route path="/dashboard" element={<Profile />} />
           <Route path="/upload" element={<Upload />} />
           <Route path="/admin_dashboard" element={<Admin />} />
+          <Route path="/payout/:id" element={<PayoutPage />} />
         </Routes>
       </BrowserRouter>
     </UserContextProvider>

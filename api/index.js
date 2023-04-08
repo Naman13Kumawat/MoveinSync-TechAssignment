@@ -1,5 +1,6 @@
 const express = require("express");
 const { google } = require("googleapis");
+const axios = require("axios");
 require("dotenv").config();
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -9,6 +10,7 @@ app.use(cors());
 const Buffer = require("buffer/").Buffer;
 
 const AWS = require("aws-sdk");
+const e = require("express");
 const s3 = new AWS.S3({
   accessKeyId: process.env.AWS_ACCESS_KEY,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
@@ -17,63 +19,6 @@ const s3 = new AWS.S3({
 
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
-
-// app.get("/api", async (req, res) => {
-//   const auth = new google.auth.GoogleAuth({
-//     keyFile: process.env.REACT_APP_GOOGLE_APP_CREADENTIALS,
-//     scopes: "https://www.googleapis.com/auth/spreadsheets",
-//   });
-
-//   //   Create client instance for auth
-//   const client = await auth.getClient();
-
-//   // Instance of Google Sheet API
-//   const googleSheets = google.sheets({ version: "v4", auth: client });
-
-//   const spreadsheetId = process.env.REACT_APP_SPREADSHEET_ID;
-//   //   const metaData = await googleSheets.spreadsheets.get({
-//   //     auth,
-//   //     spreadsheetId,
-//   //   });
-
-//   //   Read Rows from Spreadsheets
-//   const getRows = await googleSheets.spreadsheets.values.get({
-//     auth,
-//     spreadsheetId,
-//     range: "Sheet1!A2:E",
-//   });
-//   res.send(getRows.data);
-// });
-
-// app.post("/api", async (req, res) => {
-//   const { fname, number } = req.body;
-//   const auth = new google.auth.GoogleAuth({
-//     keyFile: process.env.REACT_APP_GOOGLE_APP_CREADENTIALS,
-//     scopes: "https://www.googleapis.com/auth/spreadsheets",
-//   });
-
-//   //   Create client instance for auth
-//   const client = await auth.getClient();
-
-//   // Instance of Google Sheet API
-//   const googleSheets = google.sheets({ version: "v4", auth: client });
-
-//   const spreadsheetId = process.env.REACT_APP_SPREADSHEET_ID;
-
-//   // Write row(s) to spreadsheet
-//   await googleSheets.spreadsheets.values.append({
-//     auth,
-//     spreadsheetId,
-//     range: "Sheet1!A:B",
-//     valueInputOption: "USER_ENTERED",
-//     resource: {
-//       values: [[number, fname]],
-//     },
-//   });
-//   res.send(`Row Added with name: ${fname} and number: ${number}`);
-// });
-
-// crud for google sheets
 
 const spreadsheetId = process.env.REACT_APP_SPREADSHEET_ID;
 
@@ -91,6 +36,28 @@ async function getGoogleSheet(auth) {
   return googleSheet;
 }
 
+const arrToObj = async (rows) => {
+  const auth = getAuth();
+  const googleSheet = await getGoogleSheet(auth);
+
+  const getSheetData = await googleSheet.spreadsheets.values.get({
+    auth,
+    spreadsheetId,
+    range: "Sheet1!1:1",
+  });
+  const [headers] = getSheetData.data.values;
+  const data = rows.map((row, idx) => {
+    const obj = {};
+    headers.forEach((header, index) => {
+      obj[header] = row[index];
+    });
+    obj.id = idx + 1;
+    return obj;
+  });
+
+  return data;
+};
+
 app.get("/getSheetData", async (req, res) => {
   const auth = getAuth();
   const googleSheet = await getGoogleSheet(auth);
@@ -102,32 +69,59 @@ app.get("/getSheetData", async (req, res) => {
   const getSheetData = await googleSheet.spreadsheets.values.get({
     auth,
     spreadsheetId,
-    //   range: 'Sheet1!A2:B',
     range: "Sheet1",
   });
 
   const rows = getSheetData.data.values;
-  const headers = rows.shift();
-  const data = rows.map((row, idx) => {
-    const obj = {};
-    headers.forEach((header, index) => {
-      if (header === "active") {
-        obj[header] = row[index] === "TRUE";
-      } else {
-        obj[header] = row[index];
-      }
-    });
-    obj.id = idx + 1;
-    return obj;
-  });
+  rows.shift();
+  // const headers = rows.shift();
+  // const data = rows.map((row, idx) => {
+  //   const obj = {};
+  //   headers.forEach((header, index) => {
+  //     obj[header] = row[index];
+  //   });
+  //   obj.id = idx + 1;
+  //   return obj;
+  // });
+
+  const data = await arrToObj(rows);
 
   //   console.log(data);
   res.status(200).json({
     success: true,
     metaData: getMetaData,
-    // data: getSheetData.data.values,
     data,
   });
+});
+
+// Get sheet row with row id
+app.get("/getSheetData/row/:id", async (req, res) => {
+  const id = Number(req.params.id);
+  const auth = getAuth();
+  const googleSheet = await getGoogleSheet(auth);
+
+  const getMetaData = await googleSheet.spreadsheets.get({
+    auth,
+    spreadsheetId,
+  });
+
+  const getSheetData = await googleSheet.spreadsheets.values.get({
+    auth,
+    spreadsheetId,
+    range: `Sheet1!${id + 1}:${id + 1}`,
+  });
+
+  const row = getSheetData.data.values;
+  if (!row) {
+    res.status(404).json({
+      errorStatus: 404,
+      error: `No data found with id: ${id}`,
+    });
+  } else {
+    const [data] = await arrToObj(row);
+    data.id = id;
+    res.status(200).json(data);
+  }
 });
 
 // Get sheet data with number
@@ -145,16 +139,8 @@ app.get("/getSheetData/:number", async (req, res) => {
 
   // For changing array of array to array of objects
   const rows = getSheetData.data.values;
-  const headers = rows.shift();
-  const data = rows.map((row, idx) => {
-    const obj = {};
-    headers.forEach((header, index) => {
-      obj[header] = row[index];
-    });
-    obj.id = idx + 1;
-    return obj;
-  });
-
+  rows.shift();
+  const data = await arrToObj(rows);
   const filteredArr = data.filter((entry) => {
     return entry.Number === num;
   });
@@ -221,22 +207,32 @@ app.post("/updateSheetData", async (req, res) => {
   const auth = getAuth();
   const googleSheet = await getGoogleSheet(auth);
 
-  const { action, id } = req.body;
-  console.log(action, id);
+  const { action, id, toUpdate } = req.body;
+  console.log(action, id, toUpdate);
+  let col = "";
+  let val;
   let payoutLink;
-  if (action === "Approved") {
-    payoutLink = "link";
-  } else {
-    payoutLink = "Not Approved";
+  if (toUpdate == "AppNPay") {
+    col = "F";
+    if (action === "Approved") {
+      payoutLink = `/payout/${id}`;
+    } else {
+      payoutLink = "Not approved";
+    }
+    val = [action, payoutLink];
+  } else if (toUpdate === "pay") {
+    col = "G";
+    payoutLink = "Claimed";
+    val = [payoutLink];
   }
 
   await googleSheet.spreadsheets.values.update({
     auth,
     spreadsheetId,
-    range: `Sheet1!F${id + 1}`,
+    range: `Sheet1!${col}${Number(id) + 1}`,
     valueInputOption: "USER_ENTERED",
     resource: {
-      values: [[action, payoutLink]],
+      values: [val],
     },
   });
 
@@ -269,6 +265,41 @@ app.post("/upload", (req, res) => {
     console.log(`File uploaded successfully. ${data.Location}`);
     res.status(200).send(data);
   });
+});
+
+// Razorpay APIs
+// RazorpayX Composite Payout
+app.post("/payout", async (req, res) => {
+  const fund_account = req.body;
+  const mode = "NEFT";
+  // console.log(req.body);
+
+  const data = {
+    account_number: process.env.REACT_APP_RAZORPAY_TEST_ACC_NO,
+    amount: Number(process.env.REACT_APP_RAZORPAY_AMOUNT),
+    currency: "INR",
+    mode,
+    purpose: "payout",
+    fund_account,
+    queue_if_low_balance: true,
+    //   narration: `Payout for ${forMonth}, ${forYear} of ${fund_account.contact.contact}`,
+  };
+
+  const url = "https://api.razorpay.com/v1/payouts";
+  const config = {
+    headers: {
+      Authorization: `Basic ${process.env.REACT_APP_RAZORPAY_ENCODED}`,
+      // "Content-Type": "application/json",
+    },
+  };
+
+  try {
+    const response = await axios.post(url, data, config);
+    console.log(response.data);
+    res.status(200).json(response.data);
+  } catch (error) {
+    console.log(error);
+  }
 });
 
 app.listen(PORT, (req, res) => {

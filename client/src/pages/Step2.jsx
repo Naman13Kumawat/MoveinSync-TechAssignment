@@ -25,11 +25,11 @@ export default function Profile() {
   return isAuthenticated ? (
     <div>
       <label>
-        Name:&nbsp;
+        Full Name:&nbsp;
         <input
           type="text"
           name="fname"
-          placeholder="Name"
+          placeholder="Full Name"
           onChange={(e) => {
             setUser({ ...user, Name: e.target.value });
           }}

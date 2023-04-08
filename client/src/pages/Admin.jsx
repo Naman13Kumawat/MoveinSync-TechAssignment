@@ -1,5 +1,6 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 
 export default function Admin() {
   const [sheetData, setSD] = useState([]);
@@ -27,6 +28,7 @@ export default function Admin() {
     const data = {
       action: action,
       id: id,
+      toUpdate: "AppNPay",
     };
 
     const config = {
@@ -46,14 +48,6 @@ export default function Admin() {
     } catch (error) {
       console.log(error);
     }
-
-    axios(config)
-      .then(function (response) {
-        console.log(JSON.stringify(response.data));
-      })
-      .catch(function (error) {
-        console.log(error);
-      });
   };
 
   const filterFunc = (value) => {
@@ -134,7 +128,13 @@ export default function Admin() {
                 </p>
               );
             })}
-            <p>{element.PayoutLink}</p>
+            {element.Approval === "Approved" &&
+            element.PayoutLink !== "Claimed" ? (
+              <p>Payout link sent</p>
+            ) : (
+              <p>{element.PayoutLink}</p>
+            )}
+
             <hr />
           </div>
         );
