@@ -3,6 +3,9 @@ import WebcamComponent from "../components/WebcamComponent";
 import axios from "axios";
 import { UserContext } from "../context/User";
 import { useNavigate } from "react-router-dom";
+import { ToastContainer, toast } from "react-toastify";
+import AddAPhotoIcon from "@mui/icons-material/AddAPhoto";
+import { Button, IconButton } from "@mui/material";
 
 export default function Upload() {
   const { user, setUser } = useContext(UserContext);
@@ -45,7 +48,7 @@ export default function Upload() {
 
     axios(config)
       .then(function (response) {
-        console.log(JSON.stringify(response.data));
+        console.log(response.data);
         setLinks((prevValue) => {
           return [...prevValue, response.data.Location];
         });
@@ -79,6 +82,16 @@ export default function Upload() {
       ];
       images.forEach(async (imgObj) => {
         await uploadToS3(imgObj.img, imgObj.view);
+      });
+      toast.success(`Images uploaded successfully.`, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
       });
       setIsUpld(true);
     }
@@ -121,6 +134,16 @@ export default function Upload() {
   }, [user]);
 
   const handleNext = async () => {
+    toast.success("Entry Submitted", {
+      position: "top-right",
+      autoClose: 5000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+      theme: "light",
+    });
     const month = [
       "January",
       "February",
@@ -184,6 +207,18 @@ export default function Upload() {
   ];
   return (
     <div>
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
       <h1>Upload</h1>
       {imgUpd.map((card, index) => {
         return (
@@ -196,13 +231,13 @@ export default function Upload() {
               />
             ) : (
               <>
-                <button
+                <IconButton
                   onClick={() => {
                     card.weF(!card.we);
                   }}
                 >
-                  +
-                </button>
+                  <AddAPhotoIcon />
+                </IconButton>
                 <p>{card.text}</p>
               </>
             )}
@@ -210,17 +245,18 @@ export default function Upload() {
         );
       })}
       <div style={{ textAlign: "center" }}>
-        <button
-          style={{ margin: "2rem", backgroundColor: isUpld ? "green" : null }}
+        <Button
+          variant="contained"
+          style={{ margin: "2rem" }}
           onClick={handleSubmit}
           disabled={isUpld}
         >
           {isUpld ? "Uploaded" : "Upload"}
-        </button>
+        </Button>
         {isUpld && (
-          <button style={{ margin: "2rem" }} onClick={handleNext}>
+          <Button variant="contained" onClick={handleNext}>
             Next
-          </button>
+          </Button>
         )}
       </div>
     </div>

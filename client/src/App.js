@@ -6,6 +6,8 @@ import Upload from "./pages/Upload";
 import UserContextProvider from "./context/User.js";
 import Admin from "./pages/Admin";
 import PayoutPage from "./pages/PayoutPage";
+import "react-toastify/dist/ReactToastify.css";
+import NotFound from "./pages/NotFound";
 
 export default function App() {
   return (
@@ -18,6 +20,7 @@ export default function App() {
           <Route path="/upload" element={<Upload />} />
           <Route path="/admin_dashboard" element={<Admin />} />
           <Route path="/payout/:id" element={<PayoutPage />} />
+          <Route path="/*" element={<NotFound />}></Route>
         </Routes>
       </BrowserRouter>
     </UserContextProvider>

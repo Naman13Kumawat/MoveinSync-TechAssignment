@@ -1,6 +1,7 @@
 import Webcam from "react-webcam";
 import "./Webcam.css";
 import { useCallback, useRef } from "react";
+import { Button } from "@mui/material";
 
 export default function WebcamComponent(props) {
   const { img, setImg, isUpld } = props;
@@ -24,23 +25,27 @@ export default function WebcamComponent(props) {
             audio={false}
             mirrored={true}
             height={400}
-            width={300}
+            width={"100%"}
             ref={webcamRef}
             screenshotFormat="image/jpeg"
             screenshotQuality={1}
             videoConstraints={videoConstraints}
           />
-          <button onClick={capture}>Capture photo</button>
+          <Button variant="contained" className="webButton" onClick={capture}>
+            Capture photo
+          </Button>
         </>
       ) : (
         <>
-          <img src={img} alt="screenshot" />
-          <button
+          <img className="webImg" src={img} alt="screenshot" />
+          <Button
+            variant="contained"
+            className="webButton"
             onClick={() => setImg(null)}
             style={{ display: isUpld ? "none" : "" }}
           >
             Retake
-          </button>
+          </Button>
         </>
       )}
     </div>

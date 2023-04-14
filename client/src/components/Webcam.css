@@ -3,15 +3,16 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  gap: 2rem;
 }
 
-img {
-  height: 400px;
-  width: 300px;
+.webImg {
+  /* height: 400px;
+  width: 300px; */
   object-fit: cover;
 }
 
-button {
+.webbutton {
   background-color: crimson;
   color: #fff;
   margin-top: 10px;

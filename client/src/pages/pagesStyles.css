@@ -1,0 +1,50 @@
+/* Global CSS*/
+body {
+  font-family: "Poppins";
+}
+
+a {
+  text-decoration: none;
+}
+
+/* Login CSS */
+.login_logo {
+  width: 80%;
+}
+
+.login_logo img {
+  width: 100%;
+}
+
+/* Step2 CSS */
+.step2_loading {
+  width: fit-content;
+  margin: 45vh auto;
+}
+
+.step2_container {
+  display: flex;
+  margin: 35vh auto;
+  flex-direction: column;
+  align-items: center;
+}
+
+.step2_para {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* User Dashboard */
+
+/* Admin Dashboard */
+.admin_td_box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.admin_filters button {
+  font-size: 0.75rem;
+  margin-bottom: 2rem;
+}

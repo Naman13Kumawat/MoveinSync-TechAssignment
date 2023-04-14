@@ -5,6 +5,7 @@ import { UserContext } from "../context/User";
 import { Button, Switch } from "@mui/material";
 import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
+import { ToastContainer, toast } from "react-toastify";
 
 export default function PayoutPage() {
   const { id } = useParams();
@@ -92,6 +93,16 @@ export default function PayoutPage() {
         );
         if (res.status === 200) {
           updateSheet();
+          toast.success(`Payment successful.`, {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: "light",
+          });
           console.log(res.data);
         }
         console.log(res.data);
@@ -105,11 +116,23 @@ export default function PayoutPage() {
   console.log(fund_account);
   return (
     <div>
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
       <h1>PayoutPage</h1>
       <Box
         component="form"
         sx={{
-          "& > :not(style)": { m: 1, width: "40ch" },
+          "& > :not(style)": { m: 1, width: "27ch" },
         }}
         autoComplete="off"
         style={{
@@ -118,7 +141,7 @@ export default function PayoutPage() {
           alignItems: "center",
         }}
       >
-        Driver's Details
+        Personal Details
         {!!user.Number ? (
           <>
             <TextField
