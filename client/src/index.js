@@ -7,10 +7,10 @@ const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>
     <Auth0Provider
-      domain="dev-7boifksy6n785z3p.us.auth0.com"
-      clientId="XAS4p6MMakeliqMnh5I9ad0pdLvYkdTM"
+      domain={process.env.REACT_APP_AUTH0_DOMAIN}
+      clientId={process.env.REACT_APP_CLIENT_ID}
       authorizationParams={{
-        redirect_uri: "http://localhost:3000/steptwo",
+        redirect_uri: "http://localhost:3000/dashboard",
       }}
     >
       <App />

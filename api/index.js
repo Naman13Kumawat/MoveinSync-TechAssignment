@@ -10,7 +10,6 @@ app.use(cors());
 const Buffer = require("buffer/").Buffer;
 
 const AWS = require("aws-sdk");
-const e = require("express");
 const s3 = new AWS.S3({
   accessKeyId: process.env.AWS_ACCESS_KEY,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
@@ -20,6 +19,8 @@ const s3 = new AWS.S3({
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
+//require CashfreeSDK
+const cfSdk = require("cashfree-sdk");
 const spreadsheetId = process.env.REACT_APP_SPREADSHEET_ID;
 
 function getAuth() {
@@ -59,6 +60,9 @@ const arrToObj = async (rows) => {
 };
 
 app.get("/getSheetData", async (req, res) => {
+  const sheetNumber = req.query.sheetNo || "1";
+  const num = req.query.num;
+  const range = `Sheet${sheetNumber}`;
   const auth = getAuth();
   const googleSheet = await getGoogleSheet(auth);
 
@@ -69,29 +73,35 @@ app.get("/getSheetData", async (req, res) => {
   const getSheetData = await googleSheet.spreadsheets.values.get({
     auth,
     spreadsheetId,
-    range: "Sheet1",
+    range,
   });
 
   const rows = getSheetData.data.values;
   rows.shift();
-  // const headers = rows.shift();
-  // const data = rows.map((row, idx) => {
-  //   const obj = {};
-  //   headers.forEach((header, index) => {
-  //     obj[header] = row[index];
-  //   });
-  //   obj.id = idx + 1;
-  //   return obj;
-  // });
-
   const data = await arrToObj(rows);
 
-  //   console.log(data);
-  res.status(200).json({
-    success: true,
-    metaData: getMetaData,
-    data,
-  });
+  if (num) {
+    const filteredArr = data.filter((entry) => {
+      return entry.Number === num;
+    });
+    if (filteredArr.length) {
+      res.status(200).json({
+        success: true,
+        data: filteredArr,
+      });
+    } else {
+      res.json({
+        error: 404,
+        errorMessage: "User not registered!",
+      });
+    }
+  } else {
+    res.status(200).json({
+      success: true,
+      metaData: getMetaData,
+      data,
+    });
+  }
 });
 
 // Get sheet row with row id
@@ -207,7 +217,7 @@ app.post("/updateSheetData", async (req, res) => {
   const auth = getAuth();
   const googleSheet = await getGoogleSheet(auth);
 
-  const { action, id, toUpdate } = req.body;
+  const { action, id, toUpdate, link } = req.body;
   console.log(action, id, toUpdate);
   let col = "";
   let val;
@@ -215,7 +225,7 @@ app.post("/updateSheetData", async (req, res) => {
   if (toUpdate == "AppNPay") {
     col = "F";
     if (action === "Approved") {
-      payoutLink = `/payout/${id}`;
+      payoutLink = link;
     } else {
       payoutLink = "Not approved";
     }
@@ -267,38 +277,62 @@ app.post("/upload", (req, res) => {
   });
 });
 
-// Razorpay APIs
-// RazorpayX Composite Payout
-app.post("/payout", async (req, res) => {
-  const fund_account = req.body;
-  const mode = "NEFT";
-  // console.log(req.body);
-
-  const data = {
-    account_number: process.env.REACT_APP_RAZORPAY_TEST_ACC_NO,
-    amount: Number(process.env.REACT_APP_RAZORPAY_AMOUNT),
-    currency: "INR",
-    mode,
-    purpose: "payout",
-    fund_account,
-    queue_if_low_balance: true,
-    //   narration: `Payout for ${forMonth}, ${forYear} of ${fund_account.contact.contact}`,
-  };
-
-  const url = "https://api.razorpay.com/v1/payouts";
+app.post("/createcashgram", async (req, res) => {
+  const { userName, contact, approvalDate } = req.body;
+  const currentUnixTimestamp = Math.floor(Date.now() / 1000).toString();
+  const cgId = `${userName.toLowerCase()}-${contact.slice(
+    8
+  )}-${currentUnixTimestamp}`;
+  const inDateApprovalDate = new Date(approvalDate);
+  // Here link will be expired after 3 days
+  const expDate = new Date(
+    inDateApprovalDate.setDate(inDateApprovalDate.getDate() + 4)
+  );
+  const { Payouts } = cfSdk;
+  const { Cashgram } = Payouts;
   const config = {
-    headers: {
-      Authorization: `Basic ${process.env.REACT_APP_RAZORPAY_ENCODED}`,
-      // "Content-Type": "application/json",
+    Payouts: {
+      ClientID: process.env.CASHFREE_CLIENT_ID,
+      ClientSecret: process.env.CASHFREE_CLIENT_SECRET,
+      ENV: "TEST",
     },
   };
 
+  const yyyy = expDate.getFullYear();
+  const mm = expDate.getMonth() + 1;
+  const dd = expDate.getDate();
+  const expYYYYMMDD = `${yyyy}/${mm < 10 ? "0" + mm : mm}/${dd}`;
+  console.log(expYYYYMMDD);
+
+  const cashgram = {
+    cashgramId: cgId,
+    amount: process.env.CASHFREE_CASHGRAM_AMT,
+    name: userName,
+    phone: contact.slice(2),
+    linkExpiry: expYYYYMMDD,
+    remarks: `payout`,
+    notifyCustomer: 1,
+  };
+  //   init
+  Payouts.Init(config.Payouts);
+
+  const handleResponse = (response) => {
+    if (response.status === "ERROR") {
+      throw { name: "handle response error", message: "error returned" };
+    }
+  };
+  //create cashgram
+
   try {
-    const response = await axios.post(url, data, config);
-    console.log(response.data);
-    res.status(200).json(response.data);
-  } catch (error) {
-    console.log(error);
+    const response = await Cashgram.CreateCashgram(cashgram);
+    console.log("create cashgram response");
+    res.status(200).send(response);
+    console.log(response);
+    handleResponse(response);
+  } catch (err) {
+    console.log("Err caught in creating cashgram:");
+    console.log(err);
+    return;
   }
 });
 

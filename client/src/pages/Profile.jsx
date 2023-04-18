@@ -7,20 +7,14 @@ import Button from "@mui/material/Button";
 import { UserContext } from "../context/User";
 import { toast, ToastContainer } from "react-toastify";
 import { CircularProgress } from "@mui/material";
-
-import Table from "@mui/material/Table";
-import TableBody from "@mui/material/TableBody";
-import TableCell, { tableCellClasses } from "@mui/material/TableCell";
-import TableContainer from "@mui/material/TableContainer";
-import TableHead from "@mui/material/TableHead";
-import TableRow from "@mui/material/TableRow";
-import Paper from "@mui/material/Paper";
-import styled from "@emotion/styled";
+import PayrollCard from "../components/PayrollCard";
 
 export default function Profile() {
-  const { isLoading, isAuthenticated } = useAuth0();
+  const { user: authUser, isLoading, isAuthenticated } = useAuth0();
   const { user, setUser } = useContext(UserContext);
+  const [verified, setVerified] = useState(false);
   const [notUploaded, setNotUploaded] = useState(true);
+  const { logout } = useAuth0();
   const [sheetData, setSD] = useState([]);
   console.log("Context", user);
   const month = [
@@ -41,22 +35,55 @@ export default function Profile() {
   const d = new Date();
   let mntName = month[d.getMonth()];
 
+  // Verify if user is registered
   useEffect(() => {
-    const items = JSON.parse(localStorage.getItem("currUser"));
-    if (items) {
-      setUser(items);
+    if (authUser) {
+      (async () => {
+        try {
+          const res = await axios.get(
+            `http://localhost:4000/getSheetData?sheetNo=2&num=${authUser?.name.slice(
+              1
+            )}`
+          );
+          if (res.data.error === 404) {
+            console.log(res.data.errorMessage);
+            toast.error(res.data.errorMessage, {
+              position: "top-right",
+              autoClose: 5000,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+              progress: undefined,
+              theme: "light",
+            });
+            logout();
+          } else {
+            setUser({
+              Name: res.data.data[0].Name,
+              Number: res.data.data[0].Number,
+            });
+            setVerified(true);
+          }
+        } catch (error) {
+          console.log(error);
+        }
+      })();
+    }
+  }, [authUser]);
+
+  useEffect(() => {
+    if (!isLoading && verified) {
+      localStorage.setItem("currUser", JSON.stringify(user));
     }
   }, []);
 
   useEffect(() => {
     if (!!user.Number) {
       (async () => {
-        const config = {
-          method: "get",
-          url: `http://localhost:4000/getSheetData/${user.Number}`,
-        };
+        const url = `http://localhost:4000/getSheetData/${user.Number}`;
         try {
-          const res = await axios.get(config.url);
+          const res = await axios.get(url);
           setSD(res.data.reverse());
         } catch (error) {
           console.log(error);
@@ -69,7 +96,7 @@ export default function Profile() {
 
   useEffect(() => {
     sheetData?.forEach((entry) => {
-      const uploadYear = entry.UploadDateTime.split(" ")[3];
+      const uploadYear = entry.UploadDateTime.split("/")[2].slice(0, 4);
       if (
         entry.UploadMonth === mntName &&
         uploadYear === d.getFullYear().toString()
@@ -79,169 +106,53 @@ export default function Profile() {
       }
     });
   }, [sheetData]);
-  if (isLoading) {
+  // || notUploaded ISSUE
+  if (isLoading || !verified) {
     return (
       <div className="step2_loading">
+        <ToastContainer />
         <CircularProgress color="success" />
       </div>
     );
   }
 
-  const StyledTableCell = styled(TableCell)(({ theme }) => ({
-    [`&.${tableCellClasses.head}`]: {
-      backgroundColor: "#171717",
-      color: "#FFF",
-    },
-    [`&.${tableCellClasses.body}`]: {
-      fontSize: 14,
-    },
-  }));
-
-  const StyledTableRow = styled(TableRow)(({ theme }) => ({
-    "&:nth-of-type(odd)": {
-      backgroundColor: "#e8e8e8",
-    },
-    // hide last border
-    "&:last-child td, &:last-child th": {
-      border: 0,
-    },
-  }));
+  if (!verified) {
+    return <ToastContainer />;
+  }
 
   return isAuthenticated ? (
     <div>
-      <h1>Dashboard</h1>
-      <p>Welcome {user.Name}</p>
-      {/* <Logout /> */}
-      {notUploaded ? (
-        <p>
-          Upload photos for {mntName} &nbsp;
-          <Link to="/upload">
-            <Button variant="contained">Upload</Button>
-          </Link>
-        </p>
-      ) : (
-        <p>Photos uploaded for {mntName}</p>
-      )}
-      <div>
+      <ToastContainer />
+      <div className="profile_dashboard">
+        <h1>Dashboard</h1>
+        <p>Welcome {user.Name}</p>
+        {notUploaded ? (
+          <p>
+            Upload photos for {mntName} &nbsp;
+            <Link to="/upload">
+              <Button variant="contained">Upload</Button>
+            </Link>
+          </p>
+        ) : (
+          <p>Photos uploaded for {mntName}</p>
+        )}
+      </div>
+      <div className="profile_payroll">
         <h3>Payroll History</h3>
-
-        <TableContainer component={Paper}>
-          <Table sx={{ minWidth: 650 }} size="small" aria-label="a dense table">
-            <TableHead>
-              <TableRow>
-                <StyledTableCell>Number</StyledTableCell>
-                <StyledTableCell align="right">Name</StyledTableCell>
-                <StyledTableCell align="right">Upload Month</StyledTableCell>
-                <StyledTableCell align="right">
-                  Upload Date & Time
-                </StyledTableCell>
-                <StyledTableCell align="right">Links</StyledTableCell>
-                <StyledTableCell align="right">Approval</StyledTableCell>
-                <StyledTableCell align="right">Payout Link</StyledTableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {!isLoading && sheetData ? (
-                sheetData.length === 0 ? (
-                  <tr>
-                    <td>No data available</td>
-                  </tr>
-                ) : (
-                  sheetData.map((element, index) => {
-                    return (
-                      <StyledTableRow
-                        key={element.id}
-                        sx={{
-                          "&:last-child td, &:last-child th": { border: 0 },
-                        }}
-                      >
-                        <StyledTableCell component="th" scope="element">
-                          {element.Number}
-                        </StyledTableCell>
-                        <StyledTableCell align="right">
-                          {element.Name}
-                        </StyledTableCell>
-                        <StyledTableCell align="right">
-                          {element.UploadMonth}
-                        </StyledTableCell>
-                        <StyledTableCell align="right">
-                          {element.UploadDateTime}
-                        </StyledTableCell>
-                        <StyledTableCell align="right">
-                          {element.Links.split(",").map((link, index) => {
-                            return (
-                              <p key={index}>
-                                <a href={link}>{`Photo ${index + 1} link`}</a>
-                              </p>
-                            );
-                          })}
-                        </StyledTableCell>
-                        <StyledTableCell align="right">
-                          {element.Approval}
-                        </StyledTableCell>
-                        <StyledTableCell align="right">
-                          {element.Approval === "Approved" &&
-                          element.PayoutLink !== "Claimed" ? (
-                            <Link to={element.PayoutLink}>Payout Link</Link>
-                          ) : (
-                            <p>{element.PayoutLink}</p>
-                          )}
-                          {element.PayoutLink === "Not approved" &&
-                          element.UploadMonth === mntName &&
-                          index === 0 ? (
-                            <Link to="/upload">
-                              <Button variant="contained">Upload Again</Button>
-                            </Link>
-                          ) : null}
-                        </StyledTableCell>
-                      </StyledTableRow>
-                    );
-                  })
-                )
-              ) : (
-                <p>Loading...</p>
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-
-        {/* {!isLoading && sheetData ? (
-          sheetData.map((element) => {
+        {sheetData ? (
+          sheetData.map((element, index) => {
             return (
-              <div key={element.id}>
-                <p>{element.id}</p>
-                <p>{element.Number}</p>
-                <p>{element.Name}</p>
-                <p>{element.Approval}</p>
-                <p>{element.UploadMonth}</p>
-                <p>{element.UploadDateTime}</p>
-                {element.Links.split(",").map((link, index) => {
-                  return (
-                    <p key={index}>
-                      <a href={link}>{`Photo ${index + 1} link`}</a>
-                    </p>
-                  );
-                })}
-                {element.Approval === "Approved" &&
-                element.PayoutLink !== "Claimed" ? (
-                  <Link to={element.PayoutLink}>Payout Link</Link>
-                ) : (
-                  <p>{element.PayoutLink}</p>
-                )}
-                {element.PayoutLink === "Not approved" &&
-                element.UploadMonth === mntName &&
-                element.id === maxId ? (
-                  <Link to="/upload">
-                    <Button variant="contained">Upload Again</Button>
-                  </Link>
-                ) : null}
-                <hr />
-              </div>
+              <PayrollCard
+                element={element}
+                key={element.id}
+                index={index}
+                mntName={mntName}
+              />
             );
           })
         ) : (
           <p>Loading...</p>
-        )} */}
+        )}
       </div>
     </div>
   ) : (

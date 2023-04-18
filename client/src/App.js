@@ -15,11 +15,9 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Login />} />
-          <Route path="/steptwo" element={<Step2 />} />
           <Route path="/dashboard" element={<Profile />} />
           <Route path="/upload" element={<Upload />} />
           <Route path="/admin_dashboard" element={<Admin />} />
-          <Route path="/payout/:id" element={<PayoutPage />} />
           <Route path="/*" element={<NotFound />}></Route>
         </Routes>
       </BrowserRouter>

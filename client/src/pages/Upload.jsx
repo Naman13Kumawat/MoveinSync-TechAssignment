@@ -21,13 +21,6 @@ export default function Upload() {
   const [web4Enable, setW4E] = useState(false);
   const [links, setLinks] = useState([]);
   const [isUpld, setIsUpld] = useState(false);
-  const s1 = {
-    border: "solid #000",
-    padding: "2rem",
-    textAlign: "center",
-    margin: "2rem auto",
-    maxWidth: "600px",
-  };
 
   const uploadToS3 = async (image, view) => {
     const fileName = `image-${view}-${Date.now()}.jpeg`;
@@ -60,7 +53,16 @@ export default function Upload() {
 
   const handleSubmit = async () => {
     if (!(img1 && img2 && img3 && img4)) {
-      window.alert("All pictures are required!");
+      toast.error("All pictures are required!", {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+      });
     } else {
       const images = [
         {
@@ -161,6 +163,8 @@ export default function Upload() {
 
     const d = new Date();
 
+    const dateTime = `${d.getDate()}/${d.getMonth()}/${d.getFullYear()} - ${d.getHours()}:${d.getMinutes()}`;
+
     let mntName = month[d.getMonth()];
     await setUser((prevValue) => {
       return {
@@ -169,7 +173,7 @@ export default function Upload() {
         Approval: "Pending",
         PayoutLink: "Pending",
         UploadMonth: mntName,
-        UploadDateTime: d.toString(),
+        UploadDateTime: dateTime,
       };
     });
   };
@@ -207,43 +211,36 @@ export default function Upload() {
   ];
   return (
     <div>
-      <ToastContainer
-        position="top-right"
-        autoClose={5000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="light"
-      />
-      <h1>Upload</h1>
-      {imgUpd.map((card, index) => {
-        return (
-          <div key={index} style={s1}>
-            {card.we ? (
-              <WebcamComponent
-                img={card.img}
-                setImg={card.setImg}
-                isUpld={isUpld}
-              />
-            ) : (
-              <>
-                <IconButton
-                  onClick={() => {
-                    card.weF(!card.we);
-                  }}
-                >
-                  <AddAPhotoIcon />
-                </IconButton>
-                <p>{card.text}</p>
-              </>
-            )}
-          </div>
-        );
-      })}
+      <ToastContainer />
+      <div className="upload_top">
+        <h1>Upload</h1>
+      </div>
+      <div className="upload_photo_box">
+        {imgUpd.map((card, index) => {
+          return (
+            <div key={index} className="upload_window">
+              {card.we ? (
+                <WebcamComponent
+                  img={card.img}
+                  setImg={card.setImg}
+                  isUpld={isUpld}
+                />
+              ) : (
+                <>
+                  <IconButton
+                    onClick={() => {
+                      card.weF(!card.we);
+                    }}
+                  >
+                    <AddAPhotoIcon />
+                  </IconButton>
+                  <p>{card.text}</p>
+                </>
+              )}
+            </div>
+          );
+        })}
+      </div>
       <div style={{ textAlign: "center" }}>
         <Button
           variant="contained"
