@@ -299,11 +299,12 @@ app.post("/createcashgram", async (req, res) => {
   );
   const { Payouts } = cfSdk;
   const { Cashgram } = Payouts;
+  console.log("ENV: ", process.env.NODE_ENV);
   const config = {
     Payouts: {
       ClientID: process.env.MNS_CASHFREE_CLIENT_ID,
       ClientSecret: process.env.MNS_CASHFREE_CLIENT_SECRET,
-      ENV: "TEST",
+      ENV: "PRODUCTION",
     },
   };
 
