@@ -96,17 +96,24 @@ export default function Profile() {
 
   useEffect(() => {
     sheetData?.forEach((entry) => {
-      const uploadYear = entry.UploadDateTime.split("/")[2].slice(0, 4);
+      // const uploadYear = entry.UploadDateTime.split("/")[2].slice(0, 4);
       if (
-        entry.UploadMonth === mntName &&
-        uploadYear === d.getFullYear().toString()
+        entry.UploadMonth === mntName
+        // && uploadYear === d.getFullYear().toString()
       ) {
         console.log("Already Uploaded");
         setNotUploaded(false);
       }
     });
+    // console.log("first");
+    // if (sheetData.length) {
+    //   const entry = sheetData[0];
+    //   if (entry.UploadMonth !== mntName) {
+    //     console.log("Not Uploaded");
+    //     setNotUploaded(true);
+    //   } else console.log("Already");
+    // }
   }, [sheetData]);
-  // || notUploaded ISSUE
   if (isLoading || !verified) {
     return (
       <div className="step2_loading">
