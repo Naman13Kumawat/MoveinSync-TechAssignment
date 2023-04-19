@@ -142,7 +142,9 @@ export default function Upload() {
 
     const d = new Date();
 
-    const dateTime = `${d.getDate()}/${d.getMonth()}/${d.getFullYear()} - ${d.getHours()}:${d.getMinutes()}`;
+    const dateTime = `${d.getDate()}/${
+      d.getMonth() + 1
+    }/${d.getFullYear()} - ${d.getHours()}:${d.getMinutes()}`;
 
     let mntName = month[d.getMonth()];
     await setUser((prevValue) => {
