@@ -2,7 +2,7 @@ import { useContext, useEffect, useState } from "react";
 import WebcamComponent from "../components/WebcamComponent";
 import axios from "axios";
 import { UserContext } from "../context/User";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import AddAPhotoIcon from "@mui/icons-material/AddAPhoto";
 import { Button, IconButton } from "@mui/material";
@@ -22,6 +22,13 @@ export default function Upload() {
   const [links, setLinks] = useState([]);
   const [isUpld, setIsUpld] = useState(false);
 
+  useEffect(() => {
+    const items = JSON.parse(localStorage.getItem("currUser"));
+    if (items) {
+      setUser(items);
+    }
+  }, []);
+
   const uploadToS3 = async (image, view) => {
     const fileName = `image-${view}-${Date.now()}.jpeg`;
 
@@ -30,25 +37,16 @@ export default function Upload() {
       fileName: fileName,
     };
 
-    const config = {
-      method: "post",
-      url: "http://localhost:4000/upload",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      data: data,
-    };
-
-    axios(config)
-      .then(function (response) {
-        console.log(response.data);
-        setLinks((prevValue) => {
-          return [...prevValue, response.data.Location];
-        });
-      })
-      .catch(function (error) {
-        console.log(error);
+    const url = "/upload";
+    try {
+      const res = await axios.post(url, data);
+      console.log(res.data);
+      setLinks((prevValue) => {
+        return [...prevValue, res.data.Location];
       });
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   const handleSubmit = async () => {
@@ -100,34 +98,15 @@ export default function Upload() {
   };
 
   useEffect(() => {
-    const items = JSON.parse(localStorage.getItem("currUser"));
-    if (items) {
-      setUser(items);
-    }
-  }, []);
-
-  useEffect(() => {
     async function postData() {
-      console.log("in post data", user);
-      const data = JSON.stringify(user);
-
-      const config = {
-        method: "post",
-        url: "http://localhost:4000/postSheetData",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        data: data,
-      };
-
-      axios(config)
-        .then(function (response) {
-          console.log(response.data);
-          navigate("/dashboard");
-        })
-        .catch(function (error) {
-          console.log(error);
-        });
+      const url = "/postSheetData";
+      try {
+        const res = await axios.post(url, user);
+        console.log(res.data);
+        navigate("/dashboard");
+      } catch (error) {
+        console.log(error);
+      }
     }
 
     if (Object.keys(user).length > 2) {
@@ -213,6 +192,9 @@ export default function Upload() {
     <div>
       <div className="upload_top">
         <h1>Upload</h1>
+        <Link to={"/dashboard"}>
+          <p>&lt; Back</p>{" "}
+        </Link>
       </div>
       <div className="upload_photo_box">
         {imgUpd.map((card, index) => {

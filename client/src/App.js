@@ -10,7 +10,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
 
 export default function App() {
-  console.log(process.env.NODE_ENV, typeof process.env.NODE_ENV);
+  console.log("ENV:", process.env.NODE_ENV);
   axios.defaults.baseURL =
     process.env.NODE_ENV === "production"
       ? "https://sync-up.vercel.app"

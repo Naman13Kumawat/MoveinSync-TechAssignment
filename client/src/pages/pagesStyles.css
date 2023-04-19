@@ -10,7 +10,21 @@ a {
   text-decoration: none;
 }
 
+/* General */
+.loading {
+  width: fit-content;
+  margin: 1rem auto;
+}
+
 /* Login CSS */
+.login_container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  margin: 2rem 0;
+}
+
 .login_logo {
   width: 80%;
 }
@@ -19,22 +33,16 @@ a {
   width: 100%;
 }
 
-/* Step2 CSS */
-.step2_loading {
-  width: fit-content;
-  margin: 45vh auto;
-}
-
-.step2_container {
+.login_form {
   display: flex;
-  margin: 35vh auto;
   flex-direction: column;
+  gap: 1rem;
   align-items: center;
 }
 
-.step2_para {
+.login_form span {
   display: flex;
-  gap: 0.5rem;
+  align-items: center;
 }
 
 /* User Dashboard */
@@ -106,15 +114,22 @@ a {
 
 /* Upload Page */
 .upload_top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   background-color: #3aae4a;
   color: #fff;
   margin: 0;
-  padding: 1rem;
+  padding: 1rem 1.5rem;
 }
 
 .upload_top h1 {
   font-size: 1.5rem;
   font-weight: 300;
+}
+
+.upload_top a {
+  color: #fff;
 }
 
 .upload_photo_box {

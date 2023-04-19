@@ -1,4 +1,8 @@
-import { ToggleButton, ToggleButtonGroup } from "@mui/material";
+import {
+  CircularProgress,
+  ToggleButton,
+  ToggleButtonGroup,
+} from "@mui/material";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
@@ -188,7 +192,9 @@ export default function Admin() {
             })
           )
         ) : (
-          <p>Loading...</p>
+          <div className="loading">
+            <CircularProgress color="success" />
+          </div>
         )}
       </div>
     </div>

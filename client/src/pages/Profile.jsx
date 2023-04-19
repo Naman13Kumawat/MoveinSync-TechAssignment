@@ -1,6 +1,6 @@
-import { useAuth0 } from "@auth0/auth0-react";
-import Login from "./Login";
-import { Link } from "react-router-dom";
+// import { useAuth0 } from "@auth0/auth0-react";
+// import Login from "./Login";
+import { Link, useNavigate } from "react-router-dom";
 import { useContext, useEffect, useState } from "react";
 import axios from "axios";
 import Button from "@mui/material/Button";
@@ -10,11 +10,9 @@ import { CircularProgress } from "@mui/material";
 import PayrollCard from "../components/PayrollCard";
 
 export default function Profile() {
-  const { user: authUser, isLoading, isAuthenticated } = useAuth0();
+  const navigate = useNavigate();
   const { user, setUser } = useContext(UserContext);
-  const [verified, setVerified] = useState(false);
   const [notUploaded, setNotUploaded] = useState(true);
-  const { logout } = useAuth0();
   const [sheetData, setSD] = useState([]);
   const [sheetLoaded, setSheetLoaded] = useState(false);
   console.log("Context", user);
@@ -36,44 +34,23 @@ export default function Profile() {
   const d = new Date();
   let mntName = month[d.getMonth()];
 
-  // Verify if user is registered
   useEffect(() => {
-    if (authUser) {
-      (async () => {
-        try {
-          const res = await axios.get(
-            `/getSheetData?sheetNo=2&num=${authUser?.name.slice(1)}`
-          );
-          if (res.data.error === 404) {
-            console.log(res.data.errorMessage);
-            toast.error(res.data.errorMessage, {
-              position: "top-right",
-              autoClose: 5000,
-              hideProgressBar: false,
-              closeOnClick: true,
-              pauseOnHover: true,
-              draggable: true,
-              progress: undefined,
-              theme: "light",
-            });
-            logout();
-          } else {
-            setUser({
-              Name: res.data.data[0].Name,
-              Number: res.data.data[0].Number,
-            });
-            setVerified(true);
-          }
-        } catch (error) {
-          console.log(error);
-        }
-      })();
-    }
-  }, [authUser]);
-
-  useEffect(() => {
-    if (!isLoading && verified) {
-      localStorage.setItem("currUser", JSON.stringify(user));
+    const items = JSON.parse(localStorage.getItem("currUser"));
+    if (items) {
+      setUser(items);
+    } else {
+      // If no localstorage found
+      toast.error("Current User not found!", {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+      });
+      navigate("/");
     }
   }, []);
 
@@ -110,51 +87,56 @@ export default function Profile() {
     //   } else console.log("Already");
     // }
   }, [sheetData]);
-  if (isLoading || !verified || !sheetLoaded) {
-    return (
-      <div className="step2_loading">
-        <CircularProgress color="success" />
-      </div>
-    );
-  }
-  return isAuthenticated ? (
+  // if (!sheetLoaded) {
+  //   return (
+  //     <div className="step2_loading">
+  //       <CircularProgress color="success" />
+  //     </div>
+  //   );
+  // }
+  return (
     <div>
       <div className="profile_dashboard">
         <h1>Dashboard</h1>
         <p>Welcome {user.Name}</p>
-        {notUploaded ? (
-          <p>
-            Upload photos for {mntName} &nbsp;
-            <Link to="/upload">
-              <Button variant="contained">Upload</Button>
-            </Link>
-          </p>
-        ) : (
-          <p>Photos uploaded for {mntName}</p>
-        )}
+
+        {sheetLoaded ? (
+          notUploaded ? (
+            <p>
+              Upload photos for {mntName} &nbsp;
+              <Link to="/upload">
+                <Button variant="contained">Upload</Button>
+              </Link>
+            </p>
+          ) : (
+            <p>Photos uploaded for {mntName}</p>
+          )
+        ) : null}
       </div>
+
       <div className="profile_payroll">
         <h3>Payroll History</h3>
-        {sheetData ? (
-          sheetData.map((element, index) => {
-            return (
-              <PayrollCard
-                element={element}
-                key={element.id}
-                index={index}
-                mntName={mntName}
-              />
-            );
-          })
+        {sheetLoaded ? (
+          sheetData.length === 0 ? (
+            <p>No data available</p>
+          ) : (
+            sheetData.map((element, index) => {
+              return (
+                <PayrollCard
+                  element={element}
+                  key={element.id}
+                  index={index}
+                  mntName={mntName}
+                />
+              );
+            })
+          )
         ) : (
-          <p>Loading...</p>
+          <div className="loading">
+            <CircularProgress color="success" />
+          </div>
         )}
       </div>
-    </div>
-  ) : (
-    <div>
-      <p>Please login first</p>
-      <Login />
     </div>
   );
 }
