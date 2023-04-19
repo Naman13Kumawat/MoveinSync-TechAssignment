@@ -37,13 +37,14 @@ export default function PayrollCard(props) {
         </span>
       ) : null}
       <span>
-        <h1 className="title">Links:</h1>
+        <h1 className="title">Cab Pictures:</h1>
       </span>
       <span>
         {element.Links.split(",").map((link, index) => {
+          const view = link.split("-")[4];
           return (
-            <a href={link} className="title" key={index}>{`Photo${
-              index + 1
+            <a href={link} className="title" key={index}>{`${
+              view.charAt(0).toUpperCase() + view.slice(1)
             }`}</a>
           );
         })}
