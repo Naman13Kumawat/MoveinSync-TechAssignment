@@ -43,7 +43,6 @@ export default function Admin() {
         const data = {
           userName: res.data.Name,
           contact: res.data.Number,
-          approvalDate: Date.now(),
         };
         console.log(data);
         try {

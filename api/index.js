@@ -1,27 +1,25 @@
 const express = require("express");
 const { google } = require("googleapis");
-const axios = require("axios");
-require("dotenv").config();
-const app = express();
-const PORT = process.env.PORT || 4000;
 const cors = require("cors");
+const Buffer = require("buffer/").Buffer;
+const AWS = require("aws-sdk");
+require("dotenv").config();
+const cfSdk = require("cashfree-sdk");
+const PORT = process.env.PORT || 4000;
+
+const app = express();
 app.use(cors());
 
-const Buffer = require("buffer/").Buffer;
-
-const AWS = require("aws-sdk");
 const s3 = new AWS.S3({
-  accessKeyId: process.env.AWS_ACCESS_KEY,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  accessKeyId: process.env.MNS_AWS_ACCESS_KEY,
+  secretAccessKey: process.env.MNS_AWS_SECRET_ACCESS_KEY,
   region: "ap-south-1",
 });
 
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
-//require CashfreeSDK
-const cfSdk = require("cashfree-sdk");
-const spreadsheetId = process.env.SPREADSHEET_ID;
+const spreadsheetId = process.env.MNS_SPREADSHEET_ID;
 
 // function getAuth() {
 //   const auth = new google.auth.GoogleAuth({
@@ -35,8 +33,8 @@ const spreadsheetId = process.env.SPREADSHEET_ID;
 function newGetAuth() {
   const auth = new google.auth.GoogleAuth({
     credentials: {
-      client_email: process.env.GOOGLE_CLIENT_EMAIL,
-      private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n"),
+      client_email: process.env.MNS_GOOGLE_CLIENT_EMAIL,
+      private_key: process.env.MNS_GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n"),
     },
     scopes: "https://www.googleapis.com/auth/spreadsheets",
   });
@@ -270,7 +268,7 @@ app.post("/upload", (req, res) => {
   const buff = new Buffer(base64String, "base64");
   // Set the S3 key and parameters
   const params = {
-    Bucket: process.env.AWS_BUCKET_NAME,
+    Bucket: process.env.MNS_AWS_BUCKET_NAME,
     Key: fileName,
     Body: buff,
     "Content-Type": "image/jpeg",
@@ -289,13 +287,13 @@ app.post("/upload", (req, res) => {
 });
 
 app.post("/createcashgram", async (req, res) => {
-  const { userName, contact, approvalDate } = req.body;
-  const currentUnixTimestamp = Math.floor(Date.now() / 1000).toString();
+  const { userName, contact } = req.body;
+  const currentUnixTimestamp = Date.now();
   const cgId = `${userName.toLowerCase()}-${contact.slice(
     8
-  )}-${currentUnixTimestamp}`;
-  const inDateApprovalDate = new Date(approvalDate);
-  // Here link will be expired after 3 days
+  )}-${currentUnixTimestamp.toString()}`;
+  const inDateApprovalDate = new Date(currentUnixTimestamp);
+  // Here link will be expired after 4 days
   const expDate = new Date(
     inDateApprovalDate.setDate(inDateApprovalDate.getDate() + 4)
   );
@@ -303,8 +301,8 @@ app.post("/createcashgram", async (req, res) => {
   const { Cashgram } = Payouts;
   const config = {
     Payouts: {
-      ClientID: process.env.CASHFREE_CLIENT_ID,
-      ClientSecret: process.env.CASHFREE_CLIENT_SECRET,
+      ClientID: process.env.MNS_CASHFREE_CLIENT_ID,
+      ClientSecret: process.env.MNS_CASHFREE_CLIENT_SECRET,
       ENV: "TEST",
     },
   };
@@ -317,7 +315,7 @@ app.post("/createcashgram", async (req, res) => {
 
   const cashgram = {
     cashgramId: cgId,
-    amount: process.env.CASHFREE_CASHGRAM_AMT,
+    amount: process.env.MNS_CASHFREE_CASHGRAM_AMT,
     name: userName,
     phone: contact.slice(2),
     linkExpiry: expYYYYMMDD,
@@ -326,20 +324,13 @@ app.post("/createcashgram", async (req, res) => {
   };
   //   init
   Payouts.Init(config.Payouts);
-
-  const handleResponse = (response) => {
-    if (response.status === "ERROR") {
-      throw { name: "handle response error", message: "error returned" };
-    }
-  };
   //create cashgram
 
   try {
     const response = await Cashgram.CreateCashgram(cashgram);
     console.log("create cashgram response");
-    res.status(200).send(response);
     console.log(response);
-    handleResponse(response);
+    res.status(200).send(response);
   } catch (err) {
     console.log("Err caught in creating cashgram:");
     console.log(err);

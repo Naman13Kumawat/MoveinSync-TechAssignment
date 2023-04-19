@@ -16,6 +16,7 @@ export default function Profile() {
   const [notUploaded, setNotUploaded] = useState(true);
   const { logout } = useAuth0();
   const [sheetData, setSD] = useState([]);
+  const [sheetLoaded, setSheetLoaded] = useState(false);
   console.log("Context", user);
   const month = [
     "January",
@@ -85,6 +86,7 @@ export default function Profile() {
         try {
           const res = await axios.get(url);
           setSD(res.data.reverse());
+          setSheetLoaded(true);
         } catch (error) {
           console.log(error);
         }
@@ -114,7 +116,7 @@ export default function Profile() {
     //   } else console.log("Already");
     // }
   }, [sheetData]);
-  if (isLoading || !verified) {
+  if (isLoading || !verified || !sheetLoaded) {
     return (
       <div className="step2_loading">
         <ToastContainer />
