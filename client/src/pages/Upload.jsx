@@ -6,6 +6,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import AddAPhotoIcon from "@mui/icons-material/AddAPhoto";
 import { Button, IconButton } from "@mui/material";
+import { LoadingButton } from "@mui/lab";
 
 export default function Upload() {
   const { user, setUser } = useContext(UserContext);
@@ -21,6 +22,7 @@ export default function Upload() {
   const [web4Enable, setW4E] = useState(false);
   const [links, setLinks] = useState([]);
   const [isUpld, setIsUpld] = useState(false);
+  const [uplding, setUplding] = useState(false);
 
   useEffect(() => {
     const items = JSON.parse(localStorage.getItem("currUser"));
@@ -61,6 +63,7 @@ export default function Upload() {
         progress: undefined,
         theme: "light",
       });
+      setUplding(false);
       setIsUpld(true);
     }
   }, [links]);
@@ -78,6 +81,7 @@ export default function Upload() {
         theme: "light",
       });
     } else {
+      setUplding(true);
       const images = [
         {
           img: img1,
@@ -230,14 +234,15 @@ export default function Upload() {
         })}
       </div>
       <div style={{ textAlign: "center" }}>
-        <Button
+        <LoadingButton
           variant="contained"
           style={{ margin: "2rem" }}
           onClick={handleSubmit}
           disabled={isUpld}
+          loading={uplding}
         >
           {isUpld ? "Uploaded" : "Upload"}
-        </Button>
+        </LoadingButton>
         {isUpld && (
           <Button variant="contained" onClick={handleNext}>
             Next

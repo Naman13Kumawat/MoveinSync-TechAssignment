@@ -8,9 +8,9 @@ export default function WebcamComponent(props) {
   const webcamRef = useRef(null);
 
   const videoConstraints = {
-    width: 1920,
-    height: 1080,
-    aspectRatio: 1.7777778,
+    width: window.innerHeight,
+    height: window.innerWidth,
+    aspectRatio: window.innerWidth / window.innerHeight,
     facingMode: "environment",
   };
 
