@@ -43,6 +43,12 @@ a {
 .login_form span {
   display: flex;
   align-items: center;
+  width: 100%;
+}
+
+.login_form button {
+  width: fit-content;
+  margin: auto !important;
 }
 
 /* User Dashboard */

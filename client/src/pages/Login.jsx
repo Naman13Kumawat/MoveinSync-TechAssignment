@@ -107,12 +107,13 @@ export default function Login() {
             error={isInvalid}
             label="Enter phone number"
             id="outlined-start-adornment"
+            type="number"
             onChange={(e) => {
               setNumber(e.target.value);
               setIsInvalid(false);
             }}
             helperText={isInvalid ? "Invalid phone number" : null}
-            sx={{ m: 1, width: "25ch" }}
+            sx={{ m: 1, width: "100%" }}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">+91</InputAdornment>
@@ -142,6 +143,7 @@ export default function Login() {
                 id="outlined-number"
                 label="OTP"
                 type="number"
+                sx={{ m: 1, width: "100%" }}
                 InputLabelProps={{
                   shrink: true,
                 }}
@@ -152,7 +154,12 @@ export default function Login() {
               />
             </span>
             <span>
-              <Button onClick={verifyOtp} color="success" variant="contained">
+              <Button
+                onClick={verifyOtp}
+                color="success"
+                variant="contained"
+                className="login_verify_btn"
+              >
                 VERIFY
               </Button>
             </span>
