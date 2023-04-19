@@ -10,7 +10,10 @@ root.render(
       domain={process.env.REACT_APP_AUTH0_DOMAIN}
       clientId={process.env.REACT_APP_CLIENT_ID}
       authorizationParams={{
-        redirect_uri: "http://localhost:3000/dashboard",
+        redirect_uri:
+          process.env.NODE_ENV === "production"
+            ? "https://sync-up-client.vercel.app/dashboard"
+            : "http://localhost:4000/dashboard",
       }}
     >
       <App />
