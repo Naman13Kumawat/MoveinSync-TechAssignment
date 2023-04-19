@@ -49,6 +49,22 @@ export default function Upload() {
     }
   };
 
+  useEffect(() => {
+    if (links.length === 4) {
+      toast.success(`Images uploaded successfully.`, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+      });
+      setIsUpld(true);
+    }
+  }, [links]);
+
   const handleSubmit = async () => {
     if (!(img1 && img2 && img3 && img4)) {
       toast.error("All pictures are required!", {
@@ -83,17 +99,6 @@ export default function Upload() {
       images.forEach(async (imgObj) => {
         await uploadToS3(imgObj.img, imgObj.view);
       });
-      toast.success(`Images uploaded successfully.`, {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "light",
-      });
-      setIsUpld(true);
     }
   };
 

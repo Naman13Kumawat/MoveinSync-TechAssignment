@@ -271,8 +271,8 @@ app.post("/upload", (req, res) => {
     Bucket: process.env.MNS_AWS_BUCKET_NAME,
     Key: fileName,
     Body: buff,
-    "Content-Type": "image/jpeg",
     ACL: "public-read",
+    ContentType: "image/png",
   };
 
   // Upload the file to S3
@@ -280,9 +280,10 @@ app.post("/upload", (req, res) => {
     if (err) {
       console.log(err);
       res.status(500).send("Error uploading file");
+    } else {
+      console.log(`File uploaded successfully. ${data.Location}`);
+      res.status(200).send(data);
     }
-    console.log(`File uploaded successfully. ${data.Location}`);
-    res.status(200).send(data);
   });
 });
 

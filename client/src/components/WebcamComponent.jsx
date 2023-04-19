@@ -8,8 +8,9 @@ export default function WebcamComponent(props) {
   const webcamRef = useRef(null);
 
   const videoConstraints = {
-    width: 300,
-    height: 400,
+    // width: 1080,
+    // height: 1920,
+    aspectRatio: 0.5625,
     facingMode: "user",
   };
 
@@ -24,8 +25,8 @@ export default function WebcamComponent(props) {
           <Webcam
             audio={false}
             mirrored={true}
-            height={400}
             width={"100%"}
+            height={"100%"}
             ref={webcamRef}
             screenshotFormat="image/jpeg"
             screenshotQuality={1}
