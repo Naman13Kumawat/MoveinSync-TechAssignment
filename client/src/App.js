@@ -1,17 +1,23 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
-import Step2 from "./pages/Step2";
 import Profile from "./pages/Profile";
 import Upload from "./pages/Upload";
 import UserContextProvider from "./context/User.js";
 import Admin from "./pages/Admin";
-import PayoutPage from "./pages/PayoutPage";
-import "react-toastify/dist/ReactToastify.css";
 import NotFound from "./pages/NotFound";
+import axios from "axios";
+import "react-toastify/dist/ReactToastify.css";
+import { ToastContainer } from "react-toastify";
 
 export default function App() {
+  console.log(process.env.NODE_ENV, typeof process.env.NODE_ENV);
+  axios.defaults.baseURL =
+    process.env.NODE_ENV === "production"
+      ? "https://sync-up.vercel.app"
+      : "http://localhost:4000";
   return (
     <UserContextProvider>
+      <ToastContainer />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Login />} />

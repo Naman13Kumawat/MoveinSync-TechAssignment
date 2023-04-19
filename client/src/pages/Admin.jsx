@@ -1,7 +1,7 @@
 import { ToggleButton, ToggleButtonGroup } from "@mui/material";
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { ToastContainer, toast } from "react-toastify";
+import { toast } from "react-toastify";
 import AdminPayrollCard from "../components/AdminPayrollCard";
 
 export default function Admin() {
@@ -10,34 +10,30 @@ export default function Admin() {
   const [filteredData, setFD] = useState([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [appPending, setAppPending] = useState(false);
-  useEffect(() => {
-    (async () => {
-      const config = {
-        method: "get",
-        url: "http://localhost:4000/getSheetData",
-      };
-      try {
-        const res = await axios.get(config.url);
-        if (res.data.success) {
-          const reverseData = res.data.data.reverse();
-          setSD(reverseData);
-          setFD(reverseData);
-          setIsLoaded(true);
-        }
-      } catch (error) {
-        console.log(error);
+
+  const getData = async () => {
+    const endPoint = "/getSheetData";
+    try {
+      const res = await axios.get(endPoint);
+      if (res.data.success) {
+        const reverseData = res.data.data.reverse();
+        setSD(reverseData);
+        setFD(reverseData);
+        setIsLoaded(true);
       }
-    })();
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  useEffect(() => {
+    getData();
   }, []);
-  console.log("SD", sheetData);
 
   const sendCashgram = async (id) => {
     setAppPending(true);
     // Get user
     try {
-      const res = await axios.get(
-        `http://localhost:4000/getSheetData/row/${id}`
-      );
+      const res = await axios.get(`/getSheetData/row/${id}`);
       if (res.status === 200) {
         // Send CashGram
         const data = {
@@ -46,13 +42,22 @@ export default function Admin() {
         };
         console.log(data);
         try {
-          const response = await axios.post(
-            "http://localhost:4000/createcashgram",
-            data
-          );
+          const response = await axios.post("/createcashgram", data);
           if (response.data.status === "SUCCESS") {
             // console.log(response.data);
             updateApproval("Approved", id, response.data.data.cashgramLink);
+          } else {
+            toast.error(response.data.message, {
+              position: "top-right",
+              autoClose: 5000,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+              progress: undefined,
+              theme: "light",
+            });
+            setAppPending(false);
           }
         } catch (error) {
           console.log(error);
@@ -72,7 +77,7 @@ export default function Admin() {
     };
 
     const config = {
-      url: "http://localhost:4000/updateSheetData",
+      url: "/updateSheetData",
       headers: {
         "Content-Type": "application/json",
       },
@@ -93,9 +98,7 @@ export default function Admin() {
           progress: undefined,
           theme: "light",
         });
-        setTimeout(() => {
-          window.location.reload();
-        }, 2000);
+        getData();
       }
     } catch (error) {
       console.log(error);
@@ -120,7 +123,6 @@ export default function Admin() {
   };
   return (
     <div>
-      <ToastContainer />
       <div className="admin_top">
         <h1>Welcome Admin</h1>
       </div>

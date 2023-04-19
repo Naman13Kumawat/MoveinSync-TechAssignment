@@ -5,7 +5,7 @@ import { useContext, useEffect, useState } from "react";
 import axios from "axios";
 import Button from "@mui/material/Button";
 import { UserContext } from "../context/User";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import { CircularProgress } from "@mui/material";
 import PayrollCard from "../components/PayrollCard";
 
@@ -42,9 +42,7 @@ export default function Profile() {
       (async () => {
         try {
           const res = await axios.get(
-            `http://localhost:4000/getSheetData?sheetNo=2&num=${authUser?.name.slice(
-              1
-            )}`
+            `/getSheetData?sheetNo=2&num=${authUser?.name.slice(1)}`
           );
           if (res.data.error === 404) {
             console.log(res.data.errorMessage);
@@ -82,9 +80,9 @@ export default function Profile() {
   useEffect(() => {
     if (!!user.Number) {
       (async () => {
-        const url = `http://localhost:4000/getSheetData/${user.Number}`;
+        const endPoint = `/getSheetData/${user.Number}`;
         try {
-          const res = await axios.get(url);
+          const res = await axios.get(endPoint);
           setSD(res.data.reverse());
           setSheetLoaded(true);
         } catch (error) {
@@ -98,11 +96,7 @@ export default function Profile() {
 
   useEffect(() => {
     sheetData?.forEach((entry) => {
-      // const uploadYear = entry.UploadDateTime.split("/")[2].slice(0, 4);
-      if (
-        entry.UploadMonth === mntName
-        // && uploadYear === d.getFullYear().toString()
-      ) {
+      if (entry.UploadMonth === mntName) {
         console.log("Already Uploaded");
         setNotUploaded(false);
       }
@@ -119,19 +113,12 @@ export default function Profile() {
   if (isLoading || !verified || !sheetLoaded) {
     return (
       <div className="step2_loading">
-        <ToastContainer />
         <CircularProgress color="success" />
       </div>
     );
   }
-
-  if (!verified) {
-    return <ToastContainer />;
-  }
-
   return isAuthenticated ? (
     <div>
-      <ToastContainer />
       <div className="profile_dashboard">
         <h1>Dashboard</h1>
         <p>Welcome {user.Name}</p>

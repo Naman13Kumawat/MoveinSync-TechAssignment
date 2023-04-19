@@ -3,7 +3,7 @@ import WebcamComponent from "../components/WebcamComponent";
 import axios from "axios";
 import { UserContext } from "../context/User";
 import { useNavigate } from "react-router-dom";
-import { ToastContainer, toast } from "react-toastify";
+import { toast } from "react-toastify";
 import AddAPhotoIcon from "@mui/icons-material/AddAPhoto";
 import { Button, IconButton } from "@mui/material";
 
@@ -211,7 +211,6 @@ export default function Upload() {
   ];
   return (
     <div>
-      <ToastContainer />
       <div className="upload_top">
         <h1>Upload</h1>
       </div>
