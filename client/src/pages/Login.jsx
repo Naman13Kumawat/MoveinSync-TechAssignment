@@ -18,51 +18,51 @@ export default function Login() {
   const [isInvalid, setIsInvalid] = useState(false);
 
   const verifyUser = async () => {
-    try {
-      const res = await axios.get(
-        `/getSheetData?sheetNo=2&num=${"91" + number}`
-      );
-      if (res.data.error === 404) {
-        console.log(res.data.errorMessage);
-        toast.error(res.data.errorMessage, {
-          position: "top-right",
-          autoClose: 5000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-          theme: "light",
-        });
-      } else {
-        console.log(res);
-        setUser({
-          Name: res.data.data[0].Name,
-          Number: res.data.data[0].Number,
-        });
-        getOTP();
+    if (number.length !== 10) {
+      setIsInvalid(true);
+    } else {
+      try {
+        const res = await axios.get(
+          `/getSheetData?sheetNo=2&num=${"91" + number}`
+        );
+        if (res.data.error === 404) {
+          console.log(res.data.errorMessage);
+          toast.error(res.data.errorMessage, {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: "light",
+          });
+        } else {
+          console.log(res);
+          setUser({
+            Name: res.data.data[0].Name,
+            Number: res.data.data[0].Number,
+          });
+          getOTP();
+        }
+      } catch (error) {
+        console.log(error);
       }
-    } catch (error) {
-      console.log(error);
     }
   };
 
   const getOTP = () => {
-    if (number.length !== 10) {
-      setIsInvalid(true);
-    } else {
-      toast.success(`OTP sent to ${number}`, {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "light",
-      });
-      setOtp("1234");
-    }
+    toast.success(`OTP sent to ${number}`, {
+      position: "top-right",
+      autoClose: 5000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+      theme: "light",
+    });
+    setOtp("1234");
   };
 
   const verifyOtp = () => {
