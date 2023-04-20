@@ -305,7 +305,7 @@ app.post("/createcashgram", async (req, res) => {
     Payouts: {
       ClientID: process.env.MNS_CASHFREE_CLIENT_ID,
       ClientSecret: process.env.MNS_CASHFREE_CLIENT_SECRET,
-      ENV: "PRODUCTION",
+      ENV: process.env.NODE_ENV === "production" ? "PRODUCTION" : "TEST",
     },
   };
 
@@ -341,5 +341,7 @@ app.post("/createcashgram", async (req, res) => {
 });
 
 app.listen(PORT, (req, res) => {
-  console.log("Server running on port " + PORT);
+  console.log(
+    "Server running on port " + PORT + "\nENV: " + process.env.NODE_ENV
+  );
 });
