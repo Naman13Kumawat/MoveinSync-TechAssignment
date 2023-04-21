@@ -21,16 +21,7 @@ app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
 const spreadsheetId = process.env.MNS_SPREADSHEET_ID;
 
-// function getAuth() {
-//   const auth = new google.auth.GoogleAuth({
-//     keyFile: "secrets.json",
-
-//     scopes: "https://www.googleapis.com/auth/spreadsheets",
-//   });
-//   return auth;
-// }
-
-function newGetAuth() {
+function getAuth() {
   const auth = new google.auth.GoogleAuth({
     credentials: {
       client_email: process.env.MNS_GOOGLE_CLIENT_EMAIL,
@@ -48,7 +39,7 @@ async function getGoogleSheet(auth) {
 }
 
 const arrToObj = async (rows) => {
-  const auth = newGetAuth();
+  const auth = getAuth();
   const googleSheet = await getGoogleSheet(auth);
 
   const getSheetData = await googleSheet.spreadsheets.values.get({
@@ -73,7 +64,7 @@ app.get("/getSheetData", async (req, res) => {
   const sheetNumber = req.query.sheetNo || "1";
   const num = req.query.num;
   const range = `Sheet${sheetNumber}`;
-  const auth = newGetAuth();
+  const auth = getAuth();
   const googleSheet = await getGoogleSheet(auth);
 
   // const getMetaData = await googleSheet.spreadsheets.get({
@@ -116,7 +107,7 @@ app.get("/getSheetData", async (req, res) => {
 // Get sheet row with row id
 app.get("/getSheetData/row/:id", async (req, res) => {
   const id = Number(req.params.id);
-  const auth = newGetAuth();
+  const auth = getAuth();
   const googleSheet = await getGoogleSheet(auth);
 
   const getMetaData = await googleSheet.spreadsheets.get({
@@ -146,13 +137,12 @@ app.get("/getSheetData/row/:id", async (req, res) => {
 // Get sheet data with number
 app.get("/getSheetData/:number", async (req, res) => {
   const num = req.params.number;
-  const auth = newGetAuth();
+  const auth = getAuth();
   const googleSheet = await getGoogleSheet(auth);
 
   const getSheetData = await googleSheet.spreadsheets.values.get({
     auth,
     spreadsheetId,
-    //   range: 'Sheet1!A2:B',
     range: "Sheet1",
   });
 
@@ -169,7 +159,7 @@ app.get("/getSheetData/:number", async (req, res) => {
 
 //posts data to cell
 app.post("/postSheetData", async (req, res) => {
-  const auth = newGetAuth();
+  const auth = getAuth();
   const googleSheet = await getGoogleSheet(auth);
   const {
     Approval,
@@ -208,22 +198,9 @@ app.post("/postSheetData", async (req, res) => {
   });
 });
 
-// // deletes cell data
-// app.post("/deleteSheetData", async (req, res) => {
-//   const auth = getAuth();
-//   const googleSheet = await getGoogleSheet(auth);
-//   await googleSheet.spreadsheets.values.clear({
-//     auth,
-//     spreadsheetId,
-//     range: "Sheet1!A5:B5",
-//   });
-
-//   res.send("Deleted Successfully");
-// });
-
 // update cell data
 app.post("/updateSheetData", async (req, res) => {
-  const auth = newGetAuth();
+  const auth = getAuth();
   const googleSheet = await getGoogleSheet(auth);
 
   const { action, id, toUpdate, link } = req.body;
@@ -306,6 +283,7 @@ app.post("/createcashgram", async (req, res) => {
       ClientID: process.env.MNS_CASHFREE_CLIENT_ID,
       ClientSecret: process.env.MNS_CASHFREE_CLIENT_SECRET,
       ENV: process.env.NODE_ENV === "production" ? "PRODUCTION" : "TEST",
+      PublicKey: process.env.CASHFREE_PUBLIC_KEY.replace(/\\n/g, "\n"),
     },
   };
 
